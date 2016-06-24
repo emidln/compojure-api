@@ -208,7 +208,7 @@
                                     middleware manually.)"
   [handler & [options]]
   (let [options (deep-merge api-middleware-defaults options)
-        {:keys [exceptions format components]} options
+        {:keys [exceptions format components wrap-auth-middleware auth-middleware-options]} options
         {:keys [formats params-opts response-opts]} format]
     ; Break at compile time if there are deprecated options
     ; These three have been deprecated with 0.23
@@ -225,6 +225,7 @@
                  "use {:exceptions {:handlers {:compojure.api.exception/default your-handler}}} instead."
                  "Also note that exception-handler arity has been changed."))
     (-> handler
+        (cond-> wrap-auth-middleware (wrap-auth-middleware auth-middleware-options))
         (cond-> components (wrap-components components))
         ring.middleware.http-response/wrap-http-response
         (rsm/wrap-swagger-data {:produces (->mime-types (remove response-only-mimes formats))
